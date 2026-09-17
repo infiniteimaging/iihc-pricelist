@@ -156,19 +156,37 @@
     white-space:nowrap;
     padding-top:1px;
   }
+  .package-list{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
   .package-card{
     background:var(--card);
     border:1px solid var(--border);
     border-top:4px solid var(--lightblue);
     border-radius:8px;
     padding:12px 14px;
-    margin-bottom:10px;
+  }
+  .package-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:6px;
   }
   .package-name{
     font-weight:700;
     font-size:14.5px;
     color:var(--navy);
-    margin-bottom:6px;
+  }
+  .package-price{
+    flex:0 0 auto;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--teal);
+    white-space:nowrap;
   }
   .package-components{
     font-size:13px;
@@ -181,6 +199,13 @@
     font-size:12.5px;
     color:var(--maroon);
     font-weight:600;
+    text-decoration:none;
+  }
+  .package-note{
+    font-size:11.5px;
+    color:var(--muted);
+    padding:2px 2px 4px;
+    line-height:1.5;
   }
   .no-results{
     text-align:center;
@@ -244,6 +269,8 @@
     .row-desc{font-size:15px;}
     .row-price{font-size:15.5px;}
     .category-title{font-size:15px;padding:12px 16px;}
+    .package-name{font-size:15.5px;}
+    .package-price{font-size:15.5px;}
     body{padding-bottom:100px;}
     .whatsapp-fab{
       left:50%;
@@ -259,7 +286,6 @@
   /* Large tablets / desktop browsers */
   @media (min-width:1024px){
     main{max-width:880px;}
-    body{background:linear-gradient(var(--bg),var(--bg)) fixed;}
   }
 </style>
 </head>
@@ -281,21 +307,13 @@
 
 <main>
   <div class="search-wrap">
-    <input type="text" id="searchInput" placeholder="Search a scan e.g. calcium score, chest, KUB..." autocomplete="off">
+    <input type="text" id="searchInput" placeholder="Search a scan or package e.g. calcium score, chest, onco..." autocomplete="off">
     <div class="result-count" id="resultCount"></div>
   </div>
 
   <div id="resultsArea"></div>
 
-  <div class="category" id="packagesSection">
-    <div class="category-title">HEALTH SCREENING PACKAGES 2026</div>
-    <div class="rows" style="padding:12px;">
-      <div id="packagesList"></div>
-      <div style="font-size:12px;color:var(--muted);padding:4px 2px 2px;">Package pricing is bundled and confirmed at referral. WhatsApp us for the current package rate.</div>
-    </div>
-  </div>
-
-  <div class="no-results hidden" id="noResults">No matching scan found. Try a shorter keyword, or WhatsApp us to check.</div>
+  <div class="no-results hidden" id="noResults">No matching scan or package found. Try a shorter keyword, or WhatsApp us to check.</div>
 </main>
 
 <footer>
@@ -306,7 +324,10 @@
 <a href="https://wa.me/60129390887?text=Hi%20Infinite%20Imaging%2C%20I%27d%20like%20to%20refer%20a%20patient%20for%20a%20scan." class="whatsapp-fab" target="_blank" rel="noopener">WhatsApp us to refer a patient &rarr;</a>
 
 <script>
-const data = {
+const BLOOD_BASIC = "Blood Test Basic (FBC, Kidney Function, Bone Studies, Urine Test, Liver Function, Cardiac Enzyme, Diabetic Test, Lipid Profile, Thyroid Screening)";
+const BLOOD_TUMOUR = "Blood Test Basic + Tumour Marker (adds Cancer Screening markers)";
+
+const scanCategories = {
   "CT SCAN SERVICES 2026": [
     ["IIHCCT001","CT Scan Brain (Non-Contrast)","RM530.00"],
     ["IIHCCT002","CT Scan Brain (Contrast)","RM745.00"],
@@ -321,28 +342,33 @@ const data = {
     ["IIHCCT011","CT Scan IAM / Mastoids (Non-Contrast)","RM550.00"],
     ["IIHCCT012","CT Scan Facial Bone (Non-Contrast)","RM510.00"],
     ["IIHCCT013","Calcium Scoring","RM400.00"],
-    ["IIHCCT014","CT Angio (Coronary) + Calcium Scoring (Contrast)","RM2,820.00"],
+    ["IIHCCT014","CT Angio (Coronary) (Contrast)","RM2,820.00"],
     ["IIHCCT015","High Resolution CT Thorax (Low Dose CT) (Non-Contrast)","RM580.00"],
     ["IIHCCT016","CT Scan Chest + HRCT (Contrast)","RM840.00"],
     ["IIHCCT017","CT Abdomen & Pelvis (Non-Contrast)","RM1,180.00"],
     ["IIHCCT018","CT Abdomen & Pelvis (Contrast)","RM1,280.00"],
-    ["IIHCCT019","CT Urography (Non-Contrast)","RM580.00"],
-    ["IIHCCT020","CT Scan Pelvis (Non-Contrast)","RM480.00"],
-    ["IIHCCT021","CT Scan Pelvis (Contrast)","RM770.00"],
-    ["IIHCCT022","CT Scan Brain + Chest + Abdomen + Pelvis (Contrast)","RM1,880.00"],
-    ["IIHCCT023","CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast)","RM2,288.00"],
-    ["IIHCCT024","CT Scan Chest + Abdomen + Pelvis (Contrast)","RM1,488.00"],
-    ["IIHCCT025","CT Scan Cervical Spine (Non-Contrast)","RM560.00"],
-    ["IIHCCT026","CT Scan Thoracic Spine (Non-Contrast)","RM730.00"],
-    ["IIHCCT027","CT Scan Lumbar Spine (Non-Contrast)","RM730.00"],
-    ["IIHCCT028","CT Scan Extremities (Non-Contrast)","RM560.00"],
-    ["IIHCCT029","CT Angiography Brain (Contrast)","RM1,788.00"],
-    ["IIHCCT030","CT Angiography Carotid Artery (Contrast)","RM1,788.00"],
-    ["IIHCCT031","CT Angiography Aorta (Contrast)","RM1,788.00"],
-    ["IIHCCT032","CT Pulmonary Angiography (Contrast)","RM1,218.00"],
-    ["IIHCCT033","CT Angiography Renal (Contrast)","RM1,500.00"],
-    ["IIHCCT034","CT Peripheral Angiography (Contrast)","RM1,950.00"],
-    ["IIHCCT035","Virtual Colonoscopy (Contrast)","RM968.00"]
+    ["IIHCCT019","CT Adrenal 4 Phase (Contrast)","RM1,280.00"],
+    ["IIHCCT020","CT Liver 4 Phase (Contrast)","RM1,280.00"],
+    ["IIHCCT021","CT Renal 4 Phase (Contrast)","RM1,280.00"],
+    ["IIHCCT022","CT Pancreas 4 Phase (Contrast)","RM1,280.00"],
+    ["IIHCCT023","CT Urography (Non-Contrast)","RM580.00"],
+    ["IIHCCT024","CT Scan Pelvis (Non-Contrast)","RM480.00"],
+    ["IIHCCT025","CT Scan Pelvis (Contrast)","RM770.00"],
+    ["IIHCCT026","CT Scan Brain + Chest + Abdomen + Pelvis (Contrast)","RM1,888.00"],
+    ["IIHCCT027","CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast)","RM2,288.00"],
+    ["IIHCCT028","CT Scan Chest + Abdomen + Pelvis (Contrast)","RM1,488.00"],
+    ["IIHCCT029","CT Scan Cervical Spine (Non-Contrast)","RM560.00"],
+    ["IIHCCT030","CT Scan Thoracic Spine (Non-Contrast)","RM730.00"],
+    ["IIHCCT031","CT Scan Lumbar Spine (Non-Contrast)","RM730.00"],
+    ["IIHCCT032","CT Scan Extremities (Non-Contrast)","RM560.00"],
+    ["IIHCCT033","CT 3D Reconstruction","RM350.00"],
+    ["IIHCCT034","CT Angiography Brain (Contrast)","RM1,788.00"],
+    ["IIHCCT035","CT Angiography Carotid Artery (Contrast)","RM1,788.00"],
+    ["IIHCCT036","CT Angiography Aorta (Contrast)","RM1,788.00"],
+    ["IIHCCT037","CT Pulmonary Angiography (Contrast)","RM1,218.00"],
+    ["IIHCCT038","CT Angiography Renal (Contrast)","RM1,500.00"],
+    ["IIHCCT039","CT Peripheral Angiography (Contrast)","RM1,950.00"],
+    ["IIHCCT040","Virtual Colonoscopy (Contrast)","RM968.00"]
   ],
   "ULTRASOUND SERVICES 2026": [
     ["IIHCUS001","Ultrasound Abdomen & Pelvis","RM360.00"],
@@ -367,9 +393,12 @@ const data = {
     ["IIHCUS020","Ultrasound Paeds Brain","RM150.00"],
     ["IIHCUS021","Ultrasound Paeds Hips","RM170.00"],
     ["IIHCUS022","Ultrasound Paeds Spine","RM150.00"],
-    ["IIHCUS023","Ultrasound Growth Scan (Antenatal)","RM205.00"]
+    ["IIHCUS023","Ultrasound Growth Scan (Antenatal)","RM205.00"],
+    ["IIHCUS024","Ultrasound Guided MSK Steroid Injection","RM1,500.00"],
+    ["IIHCUS025","Ultrasound Guided HA / Secretome Injection","RM2,600.00"],
+    ["IIHCUS026","Ultrasound Guided Noltrex Injection","RM4,900.00"]
   ],
-  "X-RAY PRICE LIST 2026": [
+  "X-RAY SERVICES 2026": [
     ["IIHCXR001","Xray Abdomen 1 View (Supine)","RM78.00"],
     ["IIHCXR002","Xray Abdomen 2 Views (Erect & Supine)","RM103.00"],
     ["IIHCXR003","Xray Ankle Joint 2 Views (AP & Lateral)","RM78.00"],
@@ -403,31 +432,46 @@ const data = {
   ]
 };
 
-const packages = [
-  ["Cardiac + Lung Screening","CT Angio (Coronary) + Calcium Scoring (Contrast), High Resolution CT Thorax (Low Dose CT), Ultrasound Abdomen & Pelvis"],
-  ["Lung Screening (Smoker + Vaper)","High Resolution CT Thorax (Low Dose CT), CT Calcium Scoring"],
-  ["Neuro Screening","CT Brain (Contrast), CT Angiography Brain (Contrast), CT Angiography Carotid Artery (Contrast)"],
-  ["Gastro Screening (Basic)","Ultrasound Abdomen & Pelvis, CXR, Bone Mineral Density (AI VeriOsteo OP)"],
-  ["Gastro Screening (Advanced)","CT Abdomen & Pelvis (Contrast), Virtual Colonoscopy, CXR, Bone Mineral Density (AI VeriOsteo OP)"],
-  ["Onco Screening Basic","CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast)"],
-  ["Onco Screening Advanced","CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast), Virtual Colonoscopy (Contrast)"],
-  ["Basic Imaging Screening Package","Ultrasound Abdomen & Pelvis, CT Calcium Score, CXR, Bone Mineral Density (AI VeriOsteo OP)"],
-  ["Cardiac & Colonoscopy","CT Angio (Coronary) + Calcium Scoring (Contrast), Bone Mineral Density (AI VeriOsteo OP), CXR, Virtual Colonoscopy"]
-];
+const packageCategories = {
+  "HEALTH SCREENING PACKAGES 2026": [
+    { name:"Cardiac + Lung Screening", price:"RM3,688.00", components:`CT Angio (Coronary) + Calcium Scoring (Contrast), High Resolution CT Thorax (Low Dose CT) (Non-Contrast), Ultrasound Abdomen & Pelvis, ${BLOOD_BASIC}` },
+    { name:"Lung Screening", price:"RM1,198.00", components:`High Resolution CT Thorax (Low Dose CT) (Non-Contrast), Calcium Scoring, ${BLOOD_BASIC}` },
+    { name:"Neuro Screening", price:"RM2,588.00", components:`CT Brain (Contrast), CT Angiography Brain (Contrast), CT Angiography Carotid Artery (Contrast), ${BLOOD_BASIC}` },
+    { name:"Gastro Screening (Basic)", price:"RM918.00", components:`Ultrasound Abdomen & Pelvis, CXR, Bone Mineral Density (AI VeriOsteo OP), ${BLOOD_TUMOUR}` },
+    { name:"Gastro Screening (Advanced)", price:"RM2,688.00", components:`CT Abdomen & Pelvis (Contrast), Virtual Colonoscopy, CXR, Bone Mineral Density (AI VeriOsteo OP), ${BLOOD_TUMOUR}` },
+    { name:"Cardiac & Colonoscopy", price:"RM3,988.00", components:`CT Angio (Coronary) + Calcium Scoring (Contrast), Bone Mineral Density (AI VeriOsteo OP), CXR, Virtual Colonoscopy, ${BLOOD_TUMOUR}` }
+  ],
+  "COMPREHENSIVE HEALTH SCREENING PACKAGES 2026": [
+    { name:"Onco Screening Basic", price:"RM2,488.00", components:`CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast), ${BLOOD_TUMOUR}` },
+    { name:"Onco Screening Advanced", price:"RM3,388.00", components:`CT Scan Brain + Neck + Chest + Abdomen + Pelvis (Contrast), Virtual Colonoscopy (Contrast), ${BLOOD_TUMOUR}` },
+    { name:"Basic Imaging Screening Package", price:"RM1,178.00", components:`Ultrasound Abdomen & Pelvis, CT Calcium Score, CXR, Bone Mineral Density (AI VeriOsteo OP), ${BLOOD_BASIC}` }
+  ],
+  "ESSENTIAL HEALTH SCREENING PACKAGES 2026": [
+    { name:"Executive Women's Health Screening", price:"RM788.00", components:`Consultation & Assessment (Vital Signs, BMI, Physical Exam), CXR, BMD via AI VeriOsteo, Ultrasound Abdomen & Pelvis, ${BLOOD_BASIC}` },
+    { name:"Executive Men's Health Screening", price:"RM788.00", components:`Consultation & Assessment (Vital Signs, BMI, Physical Exam), CXR, BMD via AI VeriOsteo, Ultrasound Abdomen & Pelvis, ${BLOOD_BASIC}` },
+    { name:"Signature Women's Health Screening", price:"RM1,218.00", components:`Consultation & Assessment (Vital Signs, BMI, Physical Exam), CXR, BMD via AI VeriOsteo, Ultrasound Breast, Ultrasound Abdomen & Pelvis, Ultrasound Thyroid, ${BLOOD_BASIC}` },
+    { name:"Signature Men's Health Screening", price:"RM1,088.00", components:`Consultation & Assessment (Vital Signs, BMI, Physical Exam), CXR, BMD via AI VeriOsteo, Ultrasound Abdomen & Pelvis, Ultrasound Thyroid, ${BLOOD_BASIC}` }
+  ]
+};
 
 const resultsArea = document.getElementById('resultsArea');
 const resultCount = document.getElementById('resultCount');
 const noResults = document.getElementById('noResults');
-const packagesList = document.getElementById('packagesList');
-const packagesSection = document.getElementById('packagesSection');
+
+const totalScanCount = Object.values(scanCategories).reduce((a,b)=>a+b.length,0);
+const totalPackageCount = Object.values(packageCategories).reduce((a,b)=>a+b.length,0);
+
+function waLink(text){
+  return `https://wa.me/60129390887?text=${encodeURIComponent(text)}`;
+}
 
 function render(filter){
   const q = filter.trim().toLowerCase();
   resultsArea.innerHTML = '';
   let totalShown = 0;
 
-  Object.keys(data).forEach(category => {
-    const items = data[category].filter(([code, desc, price]) =>
+  Object.keys(scanCategories).forEach(category => {
+    const items = scanCategories[category].filter(([code, desc]) =>
       !q || desc.toLowerCase().includes(q) || code.toLowerCase().includes(q)
     );
     if(items.length === 0) return;
@@ -452,20 +496,50 @@ function render(filter){
     resultsArea.appendChild(catDiv);
   });
 
-  resultCount.textContent = q ? `${totalShown} result${totalShown === 1 ? '' : 's'} for "${filter}"` : `${Object.values(data).reduce((a,b)=>a+b.length,0)} scans across CT, Ultrasound and X-ray`;
-  noResults.classList.toggle('hidden', totalShown !== 0 || q === '');
-  packagesSection.classList.toggle('hidden', q !== '' && !"health screening packages 2026".includes(q));
-}
+  Object.keys(packageCategories).forEach(group => {
+    const pkgs = packageCategories[group].filter(p =>
+      !q || p.name.toLowerCase().includes(q) || p.components.toLowerCase().includes(q)
+    );
+    if(pkgs.length === 0) return;
+    totalShown += pkgs.length;
 
-function renderPackages(){
-  packagesList.innerHTML = packages.map(([name, comps]) =>
-    `<div class="package-card"><div class="package-name">${name}</div><div class="package-components">${comps}</div><a href="https://wa.me/60129390887?text=Hi%20Infinite%20Imaging%2C%20please%20confirm%20the%20price%20for%20the%20${encodeURIComponent(name)}%20package." class="package-cta">WhatsApp for package price &rarr;</a></div>`
-  ).join('');
+    const catDiv = document.createElement('div');
+    catDiv.className = 'category';
+    const title = document.createElement('div');
+    title.className = 'category-title';
+    title.textContent = group;
+    catDiv.appendChild(title);
+
+    const rowsDiv = document.createElement('div');
+    rowsDiv.className = 'rows';
+    const listDiv = document.createElement('div');
+    listDiv.className = 'package-list';
+    pkgs.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'package-card';
+      const link = waLink(`Hi Infinite Imaging, I'd like to refer a patient for the ${p.name} package (${p.price}).`);
+      card.innerHTML = `<div class="package-head"><span class="package-name">${p.name}</span><span class="package-price">${p.price}</span></div><div class="package-components">${p.components}</div><a href="${link}" class="package-cta" target="_blank" rel="noopener">WhatsApp to refer for this package &rarr;</a>`;
+      listDiv.appendChild(card);
+    });
+    rowsDiv.appendChild(listDiv);
+    if(!q){
+      const note = document.createElement('div');
+      note.className = 'package-note';
+      note.textContent = 'Package prices include the imaging, screening and blood tests listed. Corporate and bundled rates available on request.';
+      rowsDiv.appendChild(note);
+    }
+    catDiv.appendChild(rowsDiv);
+    resultsArea.appendChild(catDiv);
+  });
+
+  resultCount.textContent = q
+    ? `${totalShown} result${totalShown === 1 ? '' : 's'} for "${filter}"`
+    : `${totalScanCount} scans and ${totalPackageCount} screening packages across CT, Ultrasound, X-ray and Health Packages`;
+  noResults.classList.toggle('hidden', totalShown !== 0);
 }
 
 document.getElementById('searchInput').addEventListener('input', e => render(e.target.value));
 render('');
-renderPackages();
 </script>
 
 </body>
